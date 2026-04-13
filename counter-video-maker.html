@@ -813,9 +813,11 @@ async function startRender() {
   let frame = 0;
   let lastMilestone = -1;
   let pulseScale = 1;
+  let renderInterval = null;
 
   function renderFrame() {
     if (current >= cfg.end) {
+      clearInterval(renderInterval);
       drawFrame(cfg, cfg.end, 1);
       mediaRecorder.stop();
       mediaRecorder.onstop = finishRender;
@@ -834,17 +836,18 @@ async function startRender() {
 
     drawFrame(cfg, current, pulseScale);
 
-    const pct = (frame / totalFrames);
-    document.getElementById('progressBar').style.width = (pct * 100) + '%';
-    document.getElementById('progressPct').textContent = (pct * 100).toFixed(1) + '%';
-    document.getElementById('progressLabel').textContent = `Rendering frame ${frame.toLocaleString()} of ${totalFrames.toLocaleString()}`;
+    if (frame % 10 === 0) {
+      const pct = (frame / totalFrames);
+      document.getElementById('progressBar').style.width = (pct * 100) + '%';
+      document.getElementById('progressPct').textContent = (pct * 100).toFixed(1) + '%';
+      document.getElementById('progressLabel').textContent = `Rendering frame ${frame.toLocaleString()} of ${totalFrames.toLocaleString()}`;
+    }
 
     current += perFrame;
     frame++;
-    setTimeout(renderFrame, 0);
   }
 
-  renderFrame();
+  renderInterval = setInterval(renderFrame, 1000 / cfg.fps);
 }
 
 function finishRender() {
